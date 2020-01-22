@@ -72,7 +72,7 @@ artist_venue = db.Table('artist_venue',
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 class Show(db.Model):
-  __tablename__ = 'Show'
+  __tablename__ = 'show'
 
   id = db.Column(db.Integer, primary_key=True)
   start_time = db.Column(db.DateTime)
