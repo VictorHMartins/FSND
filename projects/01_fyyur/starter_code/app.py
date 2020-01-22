@@ -60,7 +60,8 @@ class Artist(db.Model):
   genre = db.relationship('Genre', secondary='artist_genre', backref=db.backref('artist'))
 
 
-class Genres(db.Model):
+class Genre(db.Model):
+  __tablename__ = 'genre'
   db.Column('id', db.Integer, primary_key=True, nullable=False)
   db.Column('genre', db.String(120),nullable=False)
 
@@ -71,7 +72,7 @@ artist_venue = db.Table('artist_venue',
   db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'))
 )
 
-artist_genre = db.Table('artist_genre',
+artist_genre = db.Table('artist_genre'
   db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')),
   db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'))
 )
