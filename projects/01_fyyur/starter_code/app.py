@@ -36,28 +36,34 @@ class Venue(db.Model):
   __tablename__ = 'venue'
 
   id = db.Column(db.Integer, primary_key=True, nullable=False)
-  name = db.Column(db.String)
-  city = db.Column(db.String(120))
-  state = db.Column(db.String(120))
-  address = db.Column(db.String(120))
-  phone = db.Column(db.String(120))
-  image_link = db.Column(db.String(500))
+  name = db.Column(db.String, nullable=False)
+  city = db.Column(db.String(120), nullable=False)
+  state = db.Column(db.String(120), nullable=False)
+  address = db.Column(db.String(120), nullable=False)
+  phone = db.Column(db.String(120), nullable=False)
+  image_link = db.Column(db.String(500), nullable=False)
   facebook_link = db.Column(db.String(120))
-  genres = db.Column(db.String(120))
   artist = db.relationship('Artist', secondary='artist_venue', backref=db.backref('venue'))
+  genre = db.relationship('Genre', secondary='venue_genre', backref=db.backref('venue'))
 
 
 class Artist(db.Model):
   __tablename__ = 'artist'
 
   id = db.Column(db.Integer, primary_key=True, nullable=False)
-  name = db.Column(db.String)
-  city = db.Column(db.String(120))
-  state = db.Column(db.String(120))
-  phone = db.Column(db.String(120))
-  genres = db.Column(db.String(120))
-  image_link = db.Column(db.String(500))
+  name = db.Column(db.String, nullable=False)
+  city = db.Column(db.String(120), nullable=False)
+  state = db.Column(db.String(120), nullable=False)
+  phone = db.Column(db.String(120), nullable=False)
+  image_link = db.Column(db.String(500), nullable=False)
   facebook_link = db.Column(db.String(500))
+  genre = db.relationship('Genre', secondary='artist_genre', backref=db.backref('artist'))
+
+
+class Genres(db.Model):
+  db.Column('id', db.Integer, primary_key=True, nullable=False)
+  db.Column('genre', db.String(120),nullable=False)
+
 
 
 artist_venue = db.Table('artist_venue',
@@ -65,19 +71,29 @@ artist_venue = db.Table('artist_venue',
   db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'))
 )
 
+artist_genre = db.Table('artist_genre',
+  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')),
+  db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'))
+)
+
+venue_genre = db.Table('venue_genre',
+  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
+  db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'))
+)
+
+# class Show(db.Model):
+#   __tablename__ = 'show'
+
+#   id = db.Column(db.Integer, primary_key=True)
+#   start_time = db.Column(db.DateTime, nullable=False)
+#   artist_id = db.Column(db.Integer, nullable=False)
+#   venue_id = db.Column(db.Integer, nullable=False)
+
 
 
 # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-
-class Show(db.Model):
-  __tablename__ = 'show'
-
-  id = db.Column(db.Integer, primary_key=True)
-  start_time = db.Column(db.DateTime)
-  artist_id = db.Column(db.Integer, nullable=False)
-  venue_id = db.Column(db.Integer, nullable=False)
 
 
 #----------------------------------------------------------------------------#
