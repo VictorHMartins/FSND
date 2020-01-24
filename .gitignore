@@ -11,3 +11,6 @@ venv
 .Trashes
 ehthumbs.db
 Thumbs.db
+projects/01_fyyur/starter_code/app.pyc
+projects/01_fyyur/starter_code/config.pyc
+projects/01_fyyur/starter_code/forms.pyc
