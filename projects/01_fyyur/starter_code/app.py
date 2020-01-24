@@ -33,6 +33,7 @@ migrate = Migrate(app, db)
 # Models.
 #----------------------------------------------------------------------------#
 
+# Created Venue Table with relations to Artist table.
 class Venue(db.Model):
   __tablename__ = 'venue'
 
@@ -47,7 +48,7 @@ class Venue(db.Model):
   artist = db.relationship('Artist', secondary='artist_venue', backref=db.backref('venue'))
 
 
-
+# Created Artist, child relation to Venue table.
 class Artist(db.Model):
   __tablename__ = 'artist'
 
@@ -60,8 +61,6 @@ class Artist(db.Model):
   facebook_link = db.Column(db.String(500))
 
   
-
-
 # Creates the relationship between both Artists and Venues.
 artist_venue = db.Table('artist_venue',
   db.Column('id', db.Integer, primary_key=True, nullable=False),
@@ -69,7 +68,7 @@ artist_venue = db.Table('artist_venue',
   db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False)
   )
 
-
+# Created Genre wBeing the parent to both Artist and Venue: m::m
 class Genre(db.Model):
   __tablename__ = 'genre'
 
@@ -79,19 +78,23 @@ class Genre(db.Model):
   venue = db.relationship('Venue', secondary='venue_genre', backref=db.backref('genre'))
 
 
+# Association table for Artist and Genre
 artist_genre = db.Table('artist_genre',
 db.Column('id', db.Integer, primary_key=True, nullable=False),
 db.Column('artist_id', db.Integer, db.ForeignKey('artist.id'), nullable=False),
 db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
 
+
+# Association table for Venue and Genre
 venue_genre = db.Table('venue_genre',
 db.Column('id', db.Integer, primary_key=True, nullable=False),
 db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False),
 db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
 
-
+# Created Show to relate both Artist and Venues, however it itself would store
+# IDs so that it can identify the shows to its parents.
 class Show(db.Model):
   __tablename__ = 'show'
 
@@ -101,6 +104,7 @@ class Show(db.Model):
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False)
   artist = db.relationship('Artist', backref=db.backref('show'))
   venue = db.relationship('Venue', backref=db.backref('show'))
+
 
 # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
