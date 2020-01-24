@@ -13,6 +13,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+from sqlalchemy.orm import validates
 
 
 #----------------------------------------------------------------------------#
@@ -38,13 +39,13 @@ class Venue(db.Model):
   id = db.Column(db.Integer, primary_key=True, nullable=False)
   name = db.Column(db.String, nullable=False)
   city = db.Column(db.String(120), nullable=False)
-  state = db.Column(db.String(120), nullable=False)
+  state = db.Column(db.String(2), nullable=False)
   address = db.Column(db.String(120), nullable=False)
   phone = db.Column(db.String(120), nullable=False)
   image_link = db.Column(db.String(500), nullable=False)
   facebook_link = db.Column(db.String(120))
   artist = db.relationship('Artist', secondary='artist_venue', backref=db.backref('venue'))
-  genre = db.relationship('Genre', secondary='venue_genre', backref=db.backref('venue'))
+
 
 
 class Artist(db.Model):
@@ -53,44 +54,53 @@ class Artist(db.Model):
   id = db.Column(db.Integer, primary_key=True, nullable=False)
   name = db.Column(db.String, nullable=False)
   city = db.Column(db.String(120), nullable=False)
-  state = db.Column(db.String(120), nullable=False)
+  state = db.Column(db.String(2), nullable=False)
   phone = db.Column(db.String(120), nullable=False)
   image_link = db.Column(db.String(500), nullable=False)
   facebook_link = db.Column(db.String(500))
-  genre = db.relationship('Genre', secondary='artist_genre', backref=db.backref('artist'))
+
+  
+
+
+# Creates the relationship between both Artists and Venues.
+artist_venue = db.Table('artist_venue',
+  db.Column('id', db.Integer, primary_key=True, nullable=False),
+  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id'), nullable=False),
+  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False)
+  )
 
 
 class Genre(db.Model):
   __tablename__ = 'genre'
-  db.Column('id', db.Integer, primary_key=True, nullable=False)
-  db.Column('genre', db.String(120),nullable=False)
+
+  id = db.Column(db.Integer, primary_key=True, nullable=False)
+  genre = db.Column(db.String(120),nullable=False)
+  artist = db.relationship('Artist', secondary='artist_genre', backref=db.backref('genre'))
+  venue = db.relationship('Venue', secondary='venue_genre', backref=db.backref('genre'))
 
 
-
-artist_venue = db.Table('artist_venue',
-  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')),
-  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'))
-)
-
-artist_genre = db.Table('artist_genre'
-  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')),
-  db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'))
+artist_genre = db.Table('artist_genre',
+db.Column('id', db.Integer, primary_key=True, nullable=False),
+db.Column('artist_id', db.Integer, db.ForeignKey('artist.id'), nullable=False),
+db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
 
 venue_genre = db.Table('venue_genre',
-  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
-  db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'))
+db.Column('id', db.Integer, primary_key=True, nullable=False),
+db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False),
+db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
 
-# class Show(db.Model):
-#   __tablename__ = 'show'
 
-#   id = db.Column(db.Integer, primary_key=True)
-#   start_time = db.Column(db.DateTime, nullable=False)
-#   artist_id = db.Column(db.Integer, nullable=False)
-#   venue_id = db.Column(db.Integer, nullable=False)
+class Show(db.Model):
+  __tablename__ = 'show'
 
-
+  id = db.Column(db.Integer, primary_key=True)
+  start_time = db.Column(db.DateTime, nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False)
+  artist = db.relationship('Artist', backref=db.backref('show'))
+  venue = db.relationship('Venue', backref=db.backref('show'))
 
 # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -260,6 +270,7 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
+  print(request.form)
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
