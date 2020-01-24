@@ -81,17 +81,17 @@ class Genre(db.Model):
 
 # Association table for Artist and Genre
 artist_genre = db.Table('artist_genre',
-db.Column('id', db.Integer, primary_key=True, nullable=False),
-db.Column('artist_id', db.Integer, db.ForeignKey('artist.id'), nullable=False),
-db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
+  db.Column('id', db.Integer, primary_key=True, nullable=False),
+  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id'), nullable=False),
+  db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
 
 
 # Association table for Venue and Genre
 venue_genre = db.Table('venue_genre',
-db.Column('id', db.Integer, primary_key=True, nullable=False),
-db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False),
-db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
+  db.Column('id', db.Integer, primary_key=True, nullable=False),
+  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False),
+  db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
 
 
