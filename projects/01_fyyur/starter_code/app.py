@@ -68,6 +68,7 @@ artist_venue = db.Table('artist_venue',
   db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False)
   )
 
+
 # Created Genre wBeing the parent to both Artist and Venue: m::m
 class Genre(db.Model):
   __tablename__ = 'genre'
@@ -92,6 +93,7 @@ db.Column('id', db.Integer, primary_key=True, nullable=False),
 db.Column('venue_id', db.Integer, db.ForeignKey('venue.id'), nullable=False),
 db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), nullable=False)
 )
+
 
 # Created Show to relate both Artist and Venues, however it itself would store
 # IDs so that it can identify the shows to its parents.
