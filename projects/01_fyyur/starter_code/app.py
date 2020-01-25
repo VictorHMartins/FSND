@@ -14,7 +14,8 @@ from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
 from sqlalchemy.orm import validates
-
+from sys import exc_info
+from sqlalchemy.exc import IntegrityError
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -43,7 +44,7 @@ class Venue(db.Model):
   state = db.Column(db.String(2), nullable=False)
   address = db.Column(db.String(120), nullable=False)
   phone = db.Column(db.String(120), nullable=False)
-  image_link = db.Column(db.String(500), nullable=False)
+  image_link = db.Column(db.String(500))
   facebook_link = db.Column(db.String(120))
   artist = db.relationship('Artist', secondary='artist_venue', backref=db.backref('venue'))
 
@@ -57,8 +58,9 @@ class Artist(db.Model):
   city = db.Column(db.String(120), nullable=False)
   state = db.Column(db.String(2), nullable=False)
   phone = db.Column(db.String(120), nullable=False)
-  image_link = db.Column(db.String(500), nullable=False)
+  image_link = db.Column(db.String(500))
   facebook_link = db.Column(db.String(500))
+  
 
   
 # Creates the relationship between both Artists and Venues.
@@ -276,16 +278,39 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  print(request.form)
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  try:
+    error = False
+    genre = request.form.getlist('genres') # Takes Genres from the ImuutableDict
+    data = {}
+    for (k, v) in request.form.items(): # Obtains the rest of the entries.
+      data[k] = v
+    
+    # Creates Venue with gathered data from above.
+    venue = Venue(name=data['name'], city=data['city'], state=data['state'],
+      address=data['address'], phone=data['phone'], facebook_link=data['facebook_link'])
+    
+    # Adds Venue to Model
+    db.session.add(venue)
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    # For each genre it associates each with the Venue.
+    for g in genre:
+      genre_title = db.session.query(Genre).filter(Genre.genre == g).first()
+      venue.genre.append(genre_title)
+    
+    # Comming the additions
+    db.session.commit()
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+
+    # If any exceptions are raised it will flash an error on screen.
+  except:
+    flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
+
+
   return render_template('pages/home.html')
+
+
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -470,14 +495,40 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-  # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+  # Initial start to entering data into Artists and Genres tables.
+  try:
+    error = False
+    genre = request.form.getlist('genres') # Takes Genres from the ImuutableDict
+    data = {}
+    for (k, v) in request.form.items(): # Obtains the rest of the entries.
+      data[k] = v
+    
+    # Creates Artist with gathered data from above.
+    artist = Artist(name=data['name'], city=data['city'], state=data['state'],
+      phone=data['phone'], facebook_link=data['facebook_link'])
+    
+    # Adds artist to Model
+    db.session.add(artist)
 
-  # on successful db insert, flash success
-  flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+    # For each genre it associates each with the Artist.
+    for g in genre:
+      genre_title = db.session.query(Genre).filter(Genre.genre == g).first()
+      artist.genre.append(genre_title)
+    
+    
+    db.session.commit()
+    db.session.close()
+    flash('Artist ' + request.form['name'] + ' was successfully listed!')
+
+  # if Exception raises, it'll send user to main page and give them
+  # the error message that the action was not successful
+  except:
+    error = True
+    db.session.rollback()
+    db.session.close()
+    flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
+
+
   return render_template('pages/home.html')
 
 
@@ -535,14 +586,29 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-  # called to create new shows in the db, upon submitting new show listing form
-  # TODO: insert form data as a new Show record in the db, instead
+  error = False
+  data = {} # Takes Genres from the ImuutableDict
+  for (k, v) in request.form.items(): # Obtains the rest of the entries.
+    data[k] = v
 
-  # on successful db insert, flash success
-  flash('Show was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Show could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+
+  # Creates Show with gathered data from above.
+  show = Show(artist_id=data['artist_id'], venue_id=data['venue_id'], start_time=data['start_time'] )
+  db.session.add(show)
+
+  try:
+    db.session.commit()
+    db.session.close()
+
+    flash('Show was successfully listed!')
+  except:
+    db.session.rollback()
+    db.session.close()
+    error = True
+    flash('Show has failed to be listed! Please check connection!')
+    # TODO: on unsuccessful db insert, flash an error instead.
+    # e.g., flash('An error occurred. Show could not be listed.')
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
 
 @app.errorhandler(404)
