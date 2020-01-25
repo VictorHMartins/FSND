@@ -325,21 +325,30 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
+  
+  data = []
+  query = db.session.query(Artist).all()
+  for d in query:
+    artistDict = {"id":d.id, "name":d.name}
+    data.append(artistDict)
+
+
   # TODO: replace with real data returned from querying the database
-  data=[{
-    "id": 4,
-    "name": "Guns N Petals",
-  }, {
-    "id": 5,
-    "name": "Matt Quevedo",
-  }, {
-    "id": 6,
-    "name": "The Wild Sax Band",
-  }]
+  # data=[{
+  #   "id": 4,
+  #   "name": "Guns N Petals",
+  # }, {
+  #   "id": 5,
+  #   "name": "Matt Quevedo",
+  # }, {
+  #   "id": 6,
+  #   "name": "The Wild Sax Band",
+  # }]
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
+
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
@@ -520,8 +529,7 @@ def create_artist_submission():
     db.session.close()
     flash('Artist ' + request.form['name'] + ' was successfully listed!')
 
-  # if Exception raises, it'll send user to main page and give them
-  # the error message that the action was not successful
+
   except:
     error = True
     db.session.rollback()
@@ -578,6 +586,7 @@ def shows():
   }]
   return render_template('pages/shows.html', shows=data)
 
+
 @app.route('/shows/create')
 def create_shows():
   # renders form. do not touch.
@@ -586,17 +595,17 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-  error = False
-  data = {} # Takes Genres from the ImuutableDict
-  for (k, v) in request.form.items(): # Obtains the rest of the entries.
-    data[k] = v
-
-
-  # Creates Show with gathered data from above.
-  show = Show(artist_id=data['artist_id'], venue_id=data['venue_id'], start_time=data['start_time'] )
-  db.session.add(show)
-
+ 
   try:
+    error = False
+    data = {} # Takes Shows from the ImuutableDict
+    for (k, v) in request.form.items(): # Obtains the rest of the entries.
+      data[k] = v
+
+    # Creates Show with gathered data from above.
+    show = Show(artist_id=data['artist_id'], venue_id=data['venue_id'], start_time=data['start_time'] )
+    db.session.add(show)
+
     db.session.commit()
     db.session.close()
 
@@ -606,10 +615,11 @@ def create_show_submission():
     db.session.close()
     error = True
     flash('Show has failed to be listed! Please check connection!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+
+
   return render_template('pages/home.html')
+
+
 
 @app.errorhandler(404)
 def not_found_error(error):
