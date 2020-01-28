@@ -157,8 +157,9 @@ def venues():
       }
       show_data.append(temp)
     
-    
+    # This gets each show via ID and returns the occurence of shows if more than one is found
     occurence = Counter([k['id'] for k in show_data if k.get('id')])
+    # This organizes in descending order.
     common = dict(occurence.most_common())
 
 
@@ -190,20 +191,71 @@ def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }
+
+  request = request.form.get('search_term')
+  # This gets whatever word the user puts in case insensitive and returns values
+  # This query has problems depending on your version of Python3 make sure you have 
+  # The latest version possible for both Flask-Alchemy and Python3.6+
+  v_query = db.session.query(Venue).filter(Venue.name.ilike(f'%{search_term}%')).all()
+  show = db.session.query(Show.start_time).join(Venue.show).filter(v_query[0].id == Show.venue_id).all()
+  
+  for v in venue:
+  venue_data = {"id": v.id, "name": v.name}
+  
+  for s in show:
+    show_data = {"start_time": s.start_time 
+    }
+    
+  
+  # This gets each show via ID and returns the occurence of shows if more than one is found
+  occurence = Counter([k['id'] for k in show_data if k.get('id')])
+  # This organizes in descending order.
+  common = dict(occurence.most_common())
+
+
+  data = []
+  for d in venue:
+    temp = {"city": d.city, "state": d.state, "venues": [{
+      "id": d.id, "name": d.name, "num_upcoming_shows": 0
+      }]
+    }
+    data.append(temp)
+
+
+  for v in data:        
+    for venue in v['venues']:
+      if venue['id'] in common:
+        venue['num_upcoming_shows'] = common[venue['id']]
+
+
+
+
+
+
+
+  count = 1
+  data = []
+    for d in venue:
+      data = {"count": count "data": [{
+        "id": d.id, "name": d.name, "num_upcoming_shows": 0
+        }]
+      }
+      count += 1
+
+  
+  
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-  # shows the venue page with the given venue_id
-  # TODO: replace with real venue data from the venues table, using venue_id
  
   venue = db.session.query(Venue).filter(Venue.id == venue_id).all()
   genres = db.session.query(Genre.genre).join(Venue.genre).filter(Venue.id == venue_id).all()
@@ -218,8 +270,6 @@ def show_venue(venue_id):
     "state": s.state, "phone": s.phone, "facebook_link": s.facebook_link}
 
   
-  
-
   data = list(filter(lambda d: d['id'] == venue_id, [venue_data]))[0]
   return render_template('pages/show_venue.html', venue=data)
 
