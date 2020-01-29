@@ -188,71 +188,38 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+  
+  search_term = request.form.get('search_term')
 
-  request = request.form.get('search_term')
   # This gets whatever word the user puts in case insensitive and returns values
-  # This query has problems depending on your version of Python3 make sure you have 
+  # The following query line# 197 has problems depending on your version of Python3 make sure you have 
   # The latest version possible for both Flask-Alchemy and Python3.6+
-  v_query = db.session.query(Venue).filter(Venue.name.ilike(f'%{search_term}%')).all()
-  show = db.session.query(Show.start_time).join(Venue.show).filter(v_query[0].id == Show.venue_id).all()
+  venue = db.session.query(Venue.id, Venue.name).filter(Venue.name.ilike(f'%{search_term}%')).all()
+  show = db.session.query(Venue.id, Show.start_time, Venue.name).join(Venue.show).filter(venue[0].id == Show.venue_id).all()
   
-  for v in venue:
-  venue_data = {"id": v.id, "name": v.name}
-  
+
+  show_data = []
   for s in show:
-    show_data = {"start_time": s.start_time 
+    temp = {"id": s.id, "name": s.name, "start_time": s.start_time 
     }
-    
-  
+    show_data.append(temp)
+
   # This gets each show via ID and returns the occurence of shows if more than one is found
   occurence = Counter([k['id'] for k in show_data if k.get('id')])
   # This organizes in descending order.
   common = dict(occurence.most_common())
 
-
-  data = []
+  count = 1
   for d in venue:
-    temp = {"city": d.city, "state": d.state, "venues": [{
-      "id": d.id, "name": d.name, "num_upcoming_shows": 0
+    response = {"count": count, "data": [{
+      "id": d.id, "name": d.name, "num_upcoming_shows": common[d.id]
       }]
     }
-    data.append(temp)
-
-
-  for v in data:        
-    for venue in v['venues']:
-      if venue['id'] in common:
-        venue['num_upcoming_shows'] = common[venue['id']]
-
-
-
-
-
-
-
-  count = 1
-  data = []
-    for d in venue:
-      data = {"count": count "data": [{
-        "id": d.id, "name": d.name, "num_upcoming_shows": 0
-        }]
-      }
-      count += 1
+    count += 1
 
   
-  
-  # response={
-  #   "count": 1,
-  #   "data": [{
-  #     "id": 2,
-  #     "name": "The Dueling Pianos Bar",
-  #     "num_upcoming_shows": 0,
-  #   }]
-  # }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -341,17 +308,37 @@ def artists():
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
 
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-  # search for "band" should return "The Wild Sax Band".
-  # response={
-  #   "count": 1,
-  #   "data": [{
-  #     "id": 4,
-  #     "name": "Guns N Petals",
-  #     "num_upcoming_shows": 0,
-  #   }]
-  # }
+  
+  search_term = request.form.get('search_term')
+
+  # This gets whatever word the user puts in case insensitive and returns values
+  # The following query line# 197 has problems depending on your version of Python3 make sure you have 
+  # The latest version possible for both Flask-Alchemy and Python3.6+
+  artist = db.session.query(Artist.id, Artist.name).filter(Artist.name.ilike(f'%{search_term}%')).all()
+  show = db.session.query(Artist.id, Show.start_time, Artist.name).join(Artist.show).filter(artist[0].id == Show.artist_id).all()
+  
+
+  show_data = []
+  for s in show:
+    temp = {"id": s.id, "name": s.name, "start_time": s.start_time 
+    }
+    show_data.append(temp)
+
+  # This gets each show via ID and returns the occurence of shows if more than one is found
+  occurence = Counter([k['id'] for k in show_data if k.get('id')])
+  # This organizes in descending order.
+  common = dict(occurence.most_common())
+
+  count = 1
+  for d in artist:
+    response = {"count": count, "data": [{
+      "id": d.id, "name": d.name, "num_upcoming_shows": common[d.id]
+      }]
+    }
+    count += 1
+
+
+
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
@@ -397,7 +384,12 @@ def edit_artist_submission(artist_id):
   artist.state = fetched_artist['state']
   artist.phone = fetched_artist['phone']
   artist.facebook_link = fetched_artist['facebook_link']
-    
+  
+
+  for g in genre:
+      genre_title = db.session.query(Genre).filter(Genre.genre == g).first()
+      artist.genre.append(genre_title)
+
   db.session.commit()
 
   return redirect(url_for('show_artist', artist_id=artist_id))
@@ -405,27 +397,49 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
-  venue={
-    "id": 1,
-    "name": "The Musical Hop",
-    "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
-    "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-  }
-  # TODO: populate form with values from venue with ID <venue_id>
+
+  venue = db.session.query(Venue).get(venue_id)
+  
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-  # TODO: take values from the form submitted, and update existing
-  # venue record with ID <venue_id> using the new attributes
+  
+  try:
+
+    error = False
+    genre = request.form.getlist('genres') # Takes Genres from the ImuutableDict
+    fetched_venues = {}
+    
+    for (k, v) in request.form.items(): # Obtains the rest of the entries.
+      fetched_venues[k] = v
+
+    venue = db.session.query(Venue).get(venue_id)
+    venue.name = fetched_venues['name']
+    venue.city = fetched_venues['city']
+    venue.state = fetched_venues['state']
+    venue.address = fetched_venues['address']
+    venue.phone = fetched_venues['phone']
+    venue.facebook_link = fetched_venues['facebook_link']
+    
+    for g in genre:
+      genre_title = db.session.query(Genre).filter(Genre.genre == g).first()
+      venue.genre.append(genre_title)
+
+
+    db.session.commit()
+    flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+
+  except:
+    error = True
+    db.session.rollback()
+    db.session.close()
+    flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+
+
+
+
+
   return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist
