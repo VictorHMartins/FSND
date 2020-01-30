@@ -2,6 +2,7 @@
 # Imports
 #----------------------------------------------------------------------------#
 
+import sqlalchemy
 import itertools
 import json
 import dateutil.parser
@@ -153,7 +154,10 @@ def venues():
 
     show_data = []
     for s in show:
-      temp = {"id": s.id, "name": s.name, "start_time": s.start_time 
+      temp = {
+        "id": s.id, 
+        "name": s.name, 
+        "start_time": s.start_time 
       }
       show_data.append(temp)
     
@@ -165,8 +169,13 @@ def venues():
 
     data = []
     for d in venue:
-      temp = {"city": d.city, "state": d.state, "venues": [{
-        "id": d.id, "name": d.name, "num_upcoming_shows": 0
+      temp = {
+        "city": d.city, 
+        "state": d.state, 
+        "venues": [{
+        "id": d.id, 
+        "name": d.name, 
+        "num_upcoming_shows": 0
         }]
       }
       data.append(temp)
@@ -186,6 +195,7 @@ def venues():
 
   return render_template('pages/venues.html', areas=data);
 
+
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   
@@ -204,6 +214,7 @@ def search_venues():
     }
     show_data.append(temp)
 
+
   # This gets each show via ID and returns the occurence of shows if more than one is found
   occurence = Counter([k['id'] for k in show_data if k.get('id')])
   # This organizes in descending order.
@@ -211,14 +222,19 @@ def search_venues():
 
   count = 1
   for d in venue:
-    response = {"count": count, "data": [{
-      "id": d.id, "name": d.name, "num_upcoming_shows": common[d.id]
+    response = {
+      "count": count, 
+      "data": [{
+      "id": d.id, 
+      "name": d.name, 
+      "num_upcoming_shows": common[d.id]
       }]
     }
     count += 1
 
   
-  return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+  return render_template('pages/search_venues.html', 
+  results=response, search_term=request.form.get('search_term', ''))
 
 
 @app.route('/venues/<int:venue_id>')
@@ -233,8 +249,14 @@ def show_venue(venue_id):
       g.append(x)
   
   for s in venue:
-    venue_data = {"id": s.id, "name": s.name, "genres": g, "address": s.address, "city": s.city,
-    "state": s.state, "phone": s.phone, "facebook_link": s.facebook_link}
+    venue_data = {"id": s.id, 
+    "name": s.name, 
+    "genres": g, 
+    "address": s.address, 
+    "city": s.city,
+    "state": s.state, 
+    "phone": s.phone, 
+    "facebook_link": s.facebook_link}
 
   
   data = list(filter(lambda d: d['id'] == venue_id, [venue_data]))[0]
@@ -247,6 +269,7 @@ def show_venue(venue_id):
 def create_venue_form():
   form = VenueForm()
   return render_template('forms/new_venue.html', form=form)
+
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
@@ -273,6 +296,7 @@ def create_venue_submission():
     # Comming the additions
     db.session.commit()
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
+
 
     # If any exceptions are raised it will flash an error on screen.
   except:
@@ -303,19 +327,21 @@ def artists():
     artistDict = {"id":d.id, "name":d.name}
     data.append(artistDict)
 
+
   return render_template('pages/artists.html', artists=data)
+
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
 
-  
+  # Searches for the value in the request.
   search_term = request.form.get('search_term')
 
   # This gets whatever word the user puts in case insensitive and returns values
   # The following query line# 197 has problems depending on your version of Python3 make sure you have 
   # The latest version possible for both Flask-Alchemy and Python3.6+
   artist = db.session.query(Artist.id, Artist.name).filter(Artist.name.ilike(f'%{search_term}%')).all()
-  show = db.session.query(Artist.id, Show.start_time, Artist.name).join(Artist.show).filter(artist[0].id == Show.artist_id).all()
+  show = db.session.query(Artist.id, sqlalchemy.cast(Show.start_time, sqlalchemy.String), Artist.name).join(Artist.show).filter(artist[0].id == Show.artist_id).all()
   
 
   show_data = []
@@ -323,6 +349,7 @@ def search_artists():
     temp = {"id": s.id, "name": s.name, "start_time": s.start_time 
     }
     show_data.append(temp)
+
 
   # This gets each show via ID and returns the occurence of shows if more than one is found
   occurence = Counter([k['id'] for k in show_data if k.get('id')])
@@ -332,14 +359,15 @@ def search_artists():
   count = 1
   for d in artist:
     response = {"count": count, "data": [{
-      "id": d.id, "name": d.name, "num_upcoming_shows": common[d.id]
+      "id": d.id, 
+      "name": d.name, 
+      "num_upcoming_shows": common[d.id]
       }]
     }
     count += 1
 
-
-
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
+
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
@@ -358,6 +386,7 @@ def show_artist(artist_id):
   data = list(filter(lambda d: d['id'] == artist_id, artist))[0]
   return render_template('pages/show_artist.html', artist=data)
 
+
 #  Update
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
@@ -367,6 +396,7 @@ def edit_artist(artist_id):
   artist = db.session.query(Artist).get(artist_id)
 
   return render_template('forms/edit_artist.html', form=form, artist=artist)
+
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
@@ -394,6 +424,7 @@ def edit_artist_submission(artist_id):
 
   return redirect(url_for('show_artist', artist_id=artist_id))
 
+
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
@@ -401,6 +432,7 @@ def edit_venue(venue_id):
   venue = db.session.query(Venue).get(venue_id)
   
   return render_template('forms/edit_venue.html', form=form, venue=venue)
+
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
@@ -422,6 +454,7 @@ def edit_venue_submission(venue_id):
     venue.phone = fetched_venues['phone']
     venue.facebook_link = fetched_venues['facebook_link']
     
+
     for g in genre:
       genre_title = db.session.query(Genre).filter(Genre.genre == g).first()
       venue.genre.append(genre_title)
@@ -430,14 +463,12 @@ def edit_venue_submission(venue_id):
     db.session.commit()
     flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
 
+
   except:
     error = True
     db.session.rollback()
     db.session.close()
     flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
-
-
-
 
 
   return redirect(url_for('show_venue', venue_id=venue_id))
@@ -493,45 +524,25 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "venue_id": 1,
-    "venue_name": "The Musical Hop",
-    "artist_id": 4,
-    "artist_name": "Guns N Petals",
-    "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-    "start_time": "2019-05-21T21:30:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 5,
-    "artist_name": "Matt Quevedo",
-    "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    "start_time": "2019-06-15T23:00:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-01T20:00:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-08T20:00:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-15T20:00:00.000Z"
-  }]
+
+  show = db.session.query(Venue.id.label("v_id"), 
+  Venue.name.label("v_name"), Artist.id.label("a_id"), 
+  Artist.name.label("a_name"), Artist.image_link,
+  sqlalchemy.cast(Show.start_time, sqlalchemy.String).label("start_time")).join(Show.artist, 
+  Venue).filter(Show.venue_id == Venue.id).all()
+
+
+  data = []
+  for d in show:
+    show_dict = {"venue_id":d.v_id, 
+    "venue_name":d.v_name, 
+    "artist_id":d.a_id, 
+    "artist_name":d.a_name,
+    "artist_image_link":d.image_link, 
+    "start_time":d.start_time
+    }
+    data.append(show_dict)
+
   return render_template('pages/shows.html', shows=data)
 
 
@@ -540,6 +551,7 @@ def create_shows():
   # renders form. do not touch.
   form = ShowForm()
   return render_template('forms/new_show.html', form=form)
+
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
@@ -553,11 +565,11 @@ def create_show_submission():
     # Creates Show with gathered data from above.
     show = Show(artist_id=data['artist_id'], venue_id=data['venue_id'], start_time=data['start_time'] )
     db.session.add(show)
-
     db.session.commit()
     db.session.close()
 
     flash('Show was successfully listed!')
+  
   except:
     db.session.rollback()
     db.session.close()
