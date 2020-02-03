@@ -31,8 +31,6 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-# TODO: connect to a local postgresql database
-
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
@@ -147,11 +145,12 @@ def index():
 def venues():
   
   try:
-
+    # Creates query and obtains the venue: id, name, and start-time.
     data = []
     venue = db.session.query(Venue).all()
     show = db.session.query(Venue.id, Venue.name, Show.start_time).join(Venue.show).filter(Venue.id == Show.venue_id).all()
 
+    # Presents data in the following format to be sent back to client.
     show_data = []
     for s in show:
       temp = {
@@ -166,7 +165,7 @@ def venues():
     # This organizes in descending order.
     common = dict(occurence.most_common())
 
-
+    # Appends data to data list
     data = []
     for d in venue:
       temp = {
@@ -180,7 +179,7 @@ def venues():
       }
       data.append(temp)
 
-
+    # If the occurence is true for each venue it'll increment num_upcoming_shows
     for v in data:        
       for venue in v['venues']:
         if venue['id'] in common:
@@ -378,8 +377,16 @@ def show_artist(artist_id):
   # It'll cycle through the selected IDs obj 
   # and send the artist object back in the response.
   for d in query:
-    artistDict = {"id":d.id, "name":d.name, "city":d.city, "state":d.state,
-    "phone":d.phone, "image_link":d.image_link, "facebook_link":d.facebook_link}
+    artistDict = {
+      "id":d.id, 
+      "name":d.name, 
+      "city":d.city, 
+      "state":d.state,
+      "phone":d.phone, 
+      "image_link":d.image_link, 
+      "facebook_link":d.facebook_link
+    }
+
     artist.append(artistDict)
   
   
@@ -429,7 +436,14 @@ def edit_artist_submission(artist_id):
 def edit_venue(venue_id):
   form = VenueForm()
 
-  venue = db.session.query(Venue).get(venue_id)
+  try:
+    venue = db.session.query(Venue).get(venue_id)
+
+  except:
+    db.session.rollback()
+    db.session.close()
+    error = True
+    flash('Communication with Database failed, Please check connection!')
   
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
@@ -461,7 +475,7 @@ def edit_venue_submission(venue_id):
 
 
     db.session.commit()
-    flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+    flash('Successfully entering. Venue ' + request.form['name'])
 
 
   except:
@@ -525,23 +539,30 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
 
-  show = db.session.query(Venue.id.label("v_id"), 
-  Venue.name.label("v_name"), Artist.id.label("a_id"), 
-  Artist.name.label("a_name"), Artist.image_link,
-  sqlalchemy.cast(Show.start_time, sqlalchemy.String).label("start_time")).join(Show.artist, 
-  Venue).filter(Show.venue_id == Venue.id).all()
+  try:
+    show = db.session.query(Venue.id.label("v_id"), 
+    Venue.name.label("v_name"), Artist.id.label("a_id"), 
+    Artist.name.label("a_name"), Artist.image_link,
+    sqlalchemy.cast(Show.start_time, sqlalchemy.String).label("start_time")).join(Show.artist, 
+    Venue).filter(Show.venue_id == Venue.id).all()
 
+    data = []
+    for d in show:
+      show_dict = {"venue_id":d.v_id, 
+      "venue_name":d.v_name, 
+      "artist_id":d.a_id, 
+      "artist_name":d.a_name,
+      "artist_image_link":d.image_link, 
+      "start_time":d.start_time
+      }
+      data.append(show_dict)
+  
+  except:
+    db.session.rollback()
+    db.session.close()
+    error = True
+    flash('Show has failed to be listed! Please check connection!')
 
-  data = []
-  for d in show:
-    show_dict = {"venue_id":d.v_id, 
-    "venue_name":d.v_name, 
-    "artist_id":d.a_id, 
-    "artist_name":d.a_name,
-    "artist_image_link":d.image_link, 
-    "start_time":d.start_time
-    }
-    data.append(show_dict)
 
   return render_template('pages/shows.html', shows=data)
 
