@@ -265,6 +265,7 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
  
+  # obtains the venue by its id and the genres the venue has on schedule
   venue = db.session.query(Venue).filter(Venue.id == venue_id).all()
   genres = db.session.query(Genre.genre).join(Venue.genre).filter(Venue.id == venue_id).all()
 
@@ -333,7 +334,12 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
+
+  # Fetch API returns a JSON objects that can be manipulated. 
+  # Here the reponse gets sent with a True as a check.
   try:
+    # Obtains the venue name and ten deletes the record, depending on the circumstance 
+    # it will either error or give notice that it was sucessful.
     venue_name = request.get_json()['name']
     venue = db.session.query(Venue).filter(Venue.id == venue_id).first()
     db.session.delete(venue)
@@ -389,7 +395,9 @@ def search_artists():
 
   count = 1
   for d in artist:
-    response = {"count": count, "data": [{
+    response = {
+      "count": count, 
+      "data": [{
       "id": d.id, 
       "name": d.name, 
       "num_upcoming_shows": common[d.id]
@@ -447,6 +455,7 @@ def edit_artist_submission(artist_id):
   for (k, v) in request.form.items(): # Obtains the rest of the entries.
     fetched_artist[k] = v
 
+  # Updates all fields
   artist = db.session.query(Artist).get(artist_id)
   artist.name = fetched_artist['name']
   artist.city = fetched_artist['city']
@@ -454,7 +463,7 @@ def edit_artist_submission(artist_id):
   artist.phone = fetched_artist['phone']
   artist.facebook_link = fetched_artist['facebook_link']
   
-
+  # for each genre in the list it'll append to the relationship tables between artist and genre
   for g in genre:
       genre_title = db.session.query(Genre).filter(Genre.genre == g).first()
       artist.genre.append(genre_title)
@@ -492,6 +501,7 @@ def edit_venue_submission(venue_id):
     for (k, v) in request.form.items(): # Obtains the rest of the entries.
       fetched_venues[k] = v
 
+    # queries venue and then updates fields.
     venue = db.session.query(Venue).get(venue_id)
     venue.name = fetched_venues['name']
     venue.city = fetched_venues['city']
@@ -572,6 +582,7 @@ def create_artist_submission():
 def shows():
 
   try:
+    # Obtains the records for both venues and artist that are playing at the current show.
     show = db.session.query(Venue.id.label("v_id"), 
     Venue.name.label("v_name"), Artist.id.label("a_id"), 
     Artist.name.label("a_name"), Artist.image_link,
