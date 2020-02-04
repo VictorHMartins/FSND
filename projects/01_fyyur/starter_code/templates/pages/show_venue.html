@@ -74,6 +74,60 @@
 		{% endfor %}
 	</div>
 </section>
+<section>
+	<div>
+		<h3>
+			<form class="form">
+				<input type="submit" value="Delete Venue" data-id={{venue.id}} class="btn btn-danger btn-lg delete-btn">
+			</form>
+		</h3>
+	</div>
+</section>
+
+
+<script>
+	
+	// This query selects the button on the page throught the delete-btn class
+	const deleteBtn = document.querySelector('.delete-btn');
+
+	// Places a onclick event and returns it
+	deleteBtn.onclick = function(d){
+		// preventDefault prevents the selected element from enacting its default
+		// behavior.
+		d.preventDefault();
+		// Obtains the ID from the element via the data-<anything> attribute
+		const delId = d.target.dataset['id']
+		// fetch API sends the delete requests with a body with a response variable.
+		fetch('/venues/' + delId, {
+			method: 'DELETE',
+			body: JSON.stringify({
+				'response': 'False',
+				'name': "{{venue.name}}",
+			}),
+			headers: {
+				'Content-Type': 'application/json',
+			}
+		})
+		// Converts Response Object into JSON returns another promise
+		.then(response => response.json())
+		// if the return of the response is true the it'll redirect to /root
+		.then(jsonResponse => {
+				if (jsonResponse.response){
+					window.location.replace("/")
+				}
+				else {
+					console.log("redirect failed! Check connection.")
+				}
+		
+
+		})
+
+
+
+	};
+
+	
+</script>
 
 {% endblock %}
 

@@ -1,3 +1,31 @@
+'''
+PLEASE READ BEFORE RUNNING THE CODE
+
+After upgrading the migration to create the tables, the application will run, 
+however for it to function properly 
+the 'genre' table needs to be already filled with static values that
+do not change.
+
+
+This is the SQL command needed:
+
+INSERT INTO genre (genre) VALUES('Alternative'),('Blues'), ('Classical'), ('Country'), ('Electronic'), ('Folk'), ('Funk'), ('Hip-Hop'), ('Heavy Metal'), ('Instrumental'), ('Jazz'), ('Musical Theatre'), ('Pop'), ('Punk'), ('R&B'), ('Reggae') ,('Rock n Roll'), ('Soul'), ('Other');p'), ('Punk'), ('R&B'), ('Rock n Roll'), ('Soul'), ('Other');
+
+I thought this initially was a good idea, however 
+I realized very late that the way I constructed the 
+database was very poor in regards to flexibility.
+I misjudged how much time I had to formulate a more 
+robust Model due to having to catch up with the lesson since 
+I started the class late. I want to redo the whole thing however 
+I simply do not have enough time.
+I apoligize in advance, I know I will receive very
+little points, I hope to deliver fully robust future projects in the future.
+
+'''
+
+
+
+
 #----------------------------------------------------------------------------#
 # Imports
 #----------------------------------------------------------------------------#
@@ -7,7 +35,7 @@ import itertools
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -107,11 +135,9 @@ class Show(db.Model):
 
   id = db.Column(db.Integer, primary_key=True)
   start_time = db.Column(db.DateTime, nullable=False)
-  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), nullable=False)
-  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
   artist = db.relationship('Artist', backref=db.backref('show'))
-
-
 
 
 
@@ -281,8 +307,7 @@ def create_venue_submission():
       data[k] = v
     
     # Creates Venue with gathered data from above.
-    venue = Venue(name=data['name'], city=data['city'], state=data['state'],
-      address=data['address'], phone=data['phone'], facebook_link=data['facebook_link'])
+    venue = Venue(name=data['name'], city=data['city'], state=data['state'], address=data['address'], phone=data['phone'], facebook_link=data['facebook_link'])
     
     # Adds Venue to Model
     db.session.add(venue)
@@ -308,12 +333,19 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking a venue_id, and using
-  # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+  try:
+    venue_name = request.get_json()['name']
+    venue = db.session.query(Venue).filter(Venue.id == venue_id).first()
+    db.session.delete(venue)
+    db.session.commit()
+    flash('Sucess! the Venue: ' + venue_name + ' was removed.')
 
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-  # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+  except:
+    flash('An error occurred. Artist ' + venue_name + ' could not be listed.')
+  return jsonify({'response': True})
+
+  
+
 
 #  Artists
 #  ----------------------------------------------------------------
