@@ -39,6 +39,7 @@ def create_app(test_config=None):
   # @TODO: Use the after_request decorator to set Access-Control-Allow
   # '''
 
+# Allows CORS to allow on all routes. 
   @app.after_request
   def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
@@ -51,6 +52,7 @@ def create_app(test_config=None):
   # for all available categories.
   # '''
 
+  # Obtains all categories
   @app.route('/categories', methods=['GET'])
   def get_categories():
     selection = Category.query.order_by(Category.id).all()
@@ -76,6 +78,7 @@ def create_app(test_config=None):
   # Clicking on the page numbers should update the questions. 
   # '''
 
+  # Returns questions paginated by 10 per page
   @app.route('/questions', methods=['GET'])
   def get_questions():
     page = request.args.get('page', 1, type=int)
@@ -104,6 +107,8 @@ def create_app(test_config=None):
   # TEST: When you click the trash icon next to a question, the question will be removed.
   # This removal will persist in the database and when you refresh the page. 
   # '''
+
+  # Deletes a question by ID
   @app.route('/questions/<int:id>', methods=['DELETE'])
   def delete_question(id):
     try:
@@ -141,6 +146,7 @@ def create_app(test_config=None):
   # of the questions list in the "List" tab.  
   # '''
 
+  # Adds a question 
   @app.route('/questions', methods=['POST'])
   def add_questions():
     try:
@@ -182,6 +188,7 @@ def create_app(test_config=None):
   # Try using the word "title" to start. 
   # '''
 
+  # Searches for related questions depending on whats search, no case sensitive
   @app.route('/search', methods=['POST'])
   def search_questions():
     
@@ -214,6 +221,8 @@ def create_app(test_config=None):
   # categories in the left column will cause only questions of that 
   # category to be shown. 
   # '''
+
+  # Fetches specific question.
   try:
     @app.route('/categories/<int:id>/questions', methods=['GET'])
     def fetch_category_questions(id):
@@ -245,6 +254,7 @@ def create_app(test_config=None):
   # and shown whether they were correct or not. 
   # '''
 
+  # Play game quizzes in the Play tab
   @app.route('/quizzes', methods= ['POST'])
   def get_quizzes():
     data = request.get_json()
@@ -282,7 +292,7 @@ def create_app(test_config=None):
   # including 404 and 422. 
   # '''
 
-
+  # handling of earch error depending on their code status
   @app.errorhandler(400)
   def bad_request(error):
     return jsonify({
