@@ -1,6 +1,18 @@
 # Trivia API 
 # The API allows you to interact directly with the application by adding, deleting, obtaining questions TriviaDB
 
+
+# Installation:
+- Inside of /backend create a virtual env
+- install everything from the requirement.txt
+- activate the env
+- set the enviroment variables (created a ./run.sh that set it up automatically)
+
+- Inside of /frontend
+- run 'npm install' to install dependencies
+- then run 'npm start'
+
+
 # Endpoints:
 
 GET '/categories'
