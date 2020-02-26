@@ -71,7 +71,9 @@ def create_app(test_config=None):
               "questions": questions,
               "totalQuestions": total_questions,
               "categories": types
-            }) except: abort(400)
+            })
+        except Exception:
+            abort(400)
 
 # Deletes a question by ID
     @app.route('/questions/<int:id>', methods=['DELETE'])
@@ -95,7 +97,9 @@ def create_app(test_config=None):
               'totalQuestions': total_questions,
               'categories': categories,
               'currentCategory': category
-              })except: abort(400)
+              })
+        except Exception:
+            abort(400)
 
 # Add questions to the database
     @app.route('/questions', methods=['POST'])
@@ -124,7 +128,9 @@ def create_app(test_config=None):
               'totalQuestions': total_questions,
               'categories': categories,
               'currentCategory': category
-            })except: abort(400)
+            })
+        except Exception:
+            abort(400)
 
 # Searches for related questions depending on whats search, no case sensitive
     @app.route('/search', methods=['POST'])
@@ -143,16 +149,18 @@ def create_app(test_config=None):
               'questions': result,
               'totalQuestions': total_questions,
               'currentCategory': result[0]['category']
-            })except: abort(404)
+            })
+        except Exception:
+            abort(404)
 
 # Fetches specific question.
     @app.route('/categories/<int:id>/questions', methods=['GET'])
     def fetch_category_questions(id):
         try:
             selection = Question.query.join(Category,
-                                            Category.id == Question.category)
-            .filter(Question.category == id)
-            .all()
+                                            Category.id == Question.category)\
+                                            .filter(Question.category == id)\
+                                            .all()
             questions = paginate(request, selection)
             total_questions = len(questions)
             current_category = id
@@ -161,12 +169,16 @@ def create_app(test_config=None):
               "questions": questions,
               "totalQuestions": total_questions,
               "currentCategory": current_category
-            })except: abort(400)
+            })
+        except Exception:
+            abort(400)
+
 
 # Play game quizzes in the Play tab
     @app.route('/quizzes', methods=['POST'])
     def get_quizzes():
         data = request.get_json()
+        print(data)
         previous_questions = data['previous_questions']
         category = data['quiz_category']['type']
 
@@ -179,8 +191,8 @@ def create_app(test_config=None):
 
         else:
             questions = Question.query.join(Category,
-                                            Category.id == Question.category)
-            .filter(Category.type == category)
+                                            Category.id == Question.category)\
+                                            .filter(Category.type == category)
             result = paginate(request, questions)
 
             choice = random.choice(result)

@@ -219,9 +219,114 @@ curl -X POST -H "Content-Type: application/json" -d '{"question": "<QUESTION>", 
 }
 ```
 
+
 DELETE '/questions/<ID>'
 
 - Deletes the selected questions based on its ID
+
+
+
+POST '/search'
+- Submitting any strings regardless of captialization will return results based on your request.
+
+# Example: 
+$ curl -X POST -H "Content-Type: application/json" -d '{"searchTerm": "What"}' localhost:3000/search      
+```
+{
+  "currentCategory": 4,
+  "questions": [
+    {
+      "answer": "Muhammad Ali",
+      "category": 4,
+      "difficulty": 1,
+      "id": 9,
+      "question": "What boxer's original name is Cassius Clay?"
+    },
+    {
+      "answer": "Apollo 13",
+      "category": 5,
+      "difficulty": 4,
+      "id": 2,
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved 
+Lestat?"
+    },
+    {
+      "answer": "Edward Scissorhands",
+      "category": 5,
+      "difficulty": 3,
+      "id": 6,
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    },
+    {
+      "answer": "Lake Victoria",
+      "category": 3,
+      "difficulty": 2,
+      "id": 13,
+      "question": "What is the largest lake in Africa?"
+    },
+    {
+      "answer": "Mona Lisa",
+      "category": 2,
+      "difficulty": 3,
+      "id": 17,
+      "question": "La Giaconda is better known as what?"
+    },
+    {
+      "answer": "The Liver",
+      "category": 1,
+      "difficulty": 4,
+      "id": 20,
+      "question": "What is the heaviest organ in the human body?"
+    },
+    {
+      "answer": "Blood",
+      "category": 1,
+      "difficulty": 4,
+      "id": 22,
+      "question": "Hematology is a branch of medicine involving the study of what?"
+    }
+  ],
+  "totalQuestions": 8
+}
+```
+
+
+POST '/quizzes'
+
+- Sending it a few IDs and a category will return it a few random questions based on the category.
+- The IDs you insert inside the list will keep those track and return you different ones and will not repeat the previous question.
+- The above has the title "Science" and ID which in this case is 22, you can add others separated ny commas. 
+- Based on the category and IDs it will send you different questions.
+
+curl -X POST -H "Content-Type: application/json" -d '{"previous_questions": [22], "quiz_category": {"ty
+pe": "Science", "id":"1"}}' localhost:3000/quizzes
+
+# Example:
+```
+{
+  "previousQuestions": [
+    22
+  ],
+  "question": {
+    "answer": "The Liver",
+    "category": 1,
+    "difficulty": 4,
+    "id": 20,
+    "question": "What is the heaviest organ in the human body?"
+  }
+}
+```
+
+
+
+
 
 -----------------------------------------------------------------------------
 

@@ -41,16 +41,22 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(result.data)
 
     def test_question_via_category(self):
-        category = random.randint(1, 6)
+        category = str(random.randint(1, 6))
         result = self.client().get(f'/categories/{category}/questions')
-        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.status_code, 400)
         self.assertTrue(result.data)
 
     def test_questions_page(self):
         result = self.client().get('/questions?page=1')
         self.assertEqual(result.status_code, 200)
 
-    def test_post_categories(self):
+    def test_search_question(self):
+        result = self.client().post('/search', json={
+                                    "searchTerm": "What"})
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.data)
+
+    def test_create_question(self):
         result = self.client().post('/questions',
                                     json={"question":
                                           "This is a Test Question?",
@@ -60,8 +66,19 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
 
     def test_delete_questions(self):
-        result = self.client().delete('/categories')
-        self.assertEqual(result.status_code, 200)
+        questions = Question.query.all()
+        selection = [q.format() for q in questions]
+        pick = random.choice(selection)
+        choice = pick["id"]
+        result = self.client().delete(f'/categories/{choice}')
+        self.assertEqual(result.status_code, 404)
+
+    def test_get_quizzes(self):
+        result = self.client().post('/quizzes', json={
+            "previous_questions": [],
+            'quiz_category': {'type': "click", 'id': '1'}
+        })
+        self.assertTrue(result.status_code, 200)
 
 
 # Make the tests conveniently executable
